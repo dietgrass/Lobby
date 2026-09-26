@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GameFinder</title>
+    <title>Lobby!</title>
 
     <link rel="stylesheet" href="style.css">
 </head>
@@ -14,7 +14,7 @@
     <header class="navbar">
 
         <div class="logo">
-            LO<span>BBY</span>
+            LO<span>BBY!</span>
         </div>
 
         <div class="top-actions">
@@ -24,7 +24,7 @@
                 <input type="text" placeholder="Search games...">
             </div>
 
-            <button class="filter-button">
+            <button class="filter-button" id="filterButton">
                 ☰
                 <span>Filters</span>
             </button>
@@ -38,118 +38,22 @@
     <main>
 
         <!-- Popular Games -->
-        <section class="game-section">
+<section class="game-section">
 
-            <div class="section-heading">
-                <div>
-                    <h1>Popular Right Now</h1>
-                    <p>Games everyone is playing</p>
-                </div>
+    <div class="section-heading">
+        <div>
+            <h1>Popular Right Now</h1>
+            <p>Games everyone is playing</p>
+        </div>
 
-                <button class="view-all">View All →</button>
-            </div>
+        <button class="view-all">View All →</button>
+    </div>
 
+    <div class="game-grid" id="gameGrid">
+        <!-- Games will be loaded here by JavaScript -->
+    </div>
 
-            <div class="game-grid">
-
-                <!-- Game 1 -->
-                <div class="game-card">
-
-                    <div class="game-image game-one">
-                        <span class="platform">STEAM</span>
-                    </div>
-
-                    <div class="game-info">
-                        <h2>Lethal Company</h2>
-
-                        <div class="game-details">
-                            <span>⭐ 4.8</span>
-                            <span>👥 4 Players</span>
-                        </div>
-
-                        <div class="game-bottom">
-                            <span class="price">$9.99</span>
-                            <span class="genre">Horror</span>
-                        </div>
-                    </div>
-
-                </div>
-
-
-                <!-- Game 2 -->
-                <div class="game-card">
-
-                    <div class="game-image game-two">
-                        <span class="platform">STEAM</span>
-                    </div>
-
-                    <div class="game-info">
-                        <h2>Content Warning</h2>
-
-                        <div class="game-details">
-                            <span>⭐ 4.6</span>
-                            <span>👥 4 Players</span>
-                        </div>
-
-                        <div class="game-bottom">
-                            <span class="price">Free</span>
-                            <span class="genre">Comedy</span>
-                        </div>
-                    </div>
-
-                </div>
-
-
-                <!-- Game 3 -->
-                <div class="game-card">
-
-                    <div class="game-image game-three">
-                        <span class="platform">ROBLOX</span>
-                    </div>
-
-                    <div class="game-info">
-                        <h2>DOORS</h2>
-
-                        <div class="game-details">
-                            <span>⭐ 4.7</span>
-                            <span>👥 Multiplayer</span>
-                        </div>
-
-                        <div class="game-bottom">
-                            <span class="price">Free</span>
-                            <span class="genre">Horror</span>
-                        </div>
-                    </div>
-
-                </div>
-
-
-                <!-- Game 4 -->
-                <div class="game-card">
-
-                    <div class="game-image game-four">
-                        <span class="platform">EPIC</span>
-                    </div>
-
-                    <div class="game-info">
-                        <h2>Fortnite</h2>
-
-                        <div class="game-details">
-                            <span>⭐ 4.5</span>
-                            <span>👥 100 Players</span>
-                        </div>
-
-                        <div class="game-bottom">
-                            <span class="price">Free</span>
-                            <span class="genre">Action</span>
-                        </div>
-                    </div>
-
-                </div>
-
-            </div>
-
-        </section>
+</section>
 
 
         <!-- Trending Section -->
@@ -200,6 +104,257 @@
 
     </main>
 
+    <!-- Filter Panel -->
+<div class="filter-overlay" id="filterOverlay">
+
+    <div class="filter-panel">
+
+        <div class="filter-header">
+            <div>
+                <h2>Filters</h2>
+                <p>Find games that fit you</p>
+            </div>
+
+            <button class="close-filter" id="closeFilter">✕</button>
+        </div>
+
+
+        <!-- Platforms -->
+        <div class="filter-section">
+
+    <h3>Platform</h3>
+
+    <div class="platform-picker">
+
+        <button class="platform-option selected" data-platform="Steam">
+            <span class="platform-icon">
+                <img src="https://cdn.simpleicons.org/steam/ffffff" alt="Steam">
+            </span>
+
+            <span>Steam</span>
+
+            <span class="check-mark">✓</span>
+        </button>
+
+
+        <button class="platform-option" data-platform="Epic Games">
+            <span class="platform-icon">
+                <img src="https://cdn.simpleicons.org/epicgames/ffffff" alt="Epic Games">
+            </span>
+
+            <span>Epic</span>
+
+            <span class="check-mark">✓</span>
+        </button>
+
+
+        <button class="platform-option" data-platform="Roblox">
+            <span class="platform-icon">
+                <img src="https://cdn.simpleicons.org/roblox/ffffff" alt="Roblox">
+            </span>
+
+            <span>Roblox</span>
+
+            <span class="check-mark">✓</span>
+        </button>
+
+    </div>
+
+</div>
+
+
+        <!-- Price -->
+        <div class="filter-section">
+
+    <div class="price-header">
+        <div>
+            <h3>Price Range</h3>
+            <p>How much are you willing to spend?</p>
+        </div>
+
+        <span class="price-display" id="priceDisplay">$0 – $60</span>
+    </div>
+
+    <div class="price-slider-container" id="priceSliderContainer">
+
+        <div class="slider-track"></div>
+
+        <div class="slider-range" id="sliderRange"></div>
+
+        <input
+            type="range"
+            id="minSlider"
+            min="0"
+            max="60"
+            value="0"
+            step="1"
+        >
+
+        <input
+            type="range"
+            id="maxSlider"
+            min="0"
+            max="60"
+            value="60"
+            step="1"
+        >
+
+    </div>
+
+    <div class="price-labels">
+        <span>$0</span>
+        <span>$15</span>
+        <span>$30</span>
+        <span>$45</span>
+        <span>$60+</span>
+    </div>
+
+</div>
+
+
+        <!-- Players -->
+        <!-- Players -->
+
+<div class="filter-section">
+
+    <h3>Players</h3>
+
+    <div class="player-picker">
+
+        <button class="player-option selected" data-players="single">
+            <span class="player-icon">1</span>
+            <span>Solo</span>
+        </button>
+
+        <button class="player-option" data-players="2">
+            <span class="player-icon">2</span>
+            <span>2 Players</span>
+        </button>
+
+        <button class="player-option" data-players="4">
+            <span class="player-icon">4</span>
+            <span>3–4</span>
+        </button>
+
+        <button class="player-option" data-players="5">
+            <span class="player-icon">+</span>
+            <span>5+</span>
+        </button>
+
+    </div>
+
+    <!-- Genre -->
+
+<div class="filter-section">
+
+    <h3>Genre</h3>
+
+    <div class="genre-picker">
+
+        <button class="genre-option" data-genre="Action">
+            ⚔️ Action
+        </button>
+
+        <button class="genre-option" data-genre="Adventure">
+            🗺️ Adventure
+        </button>
+
+        <button class="genre-option" data-genre="Horror">
+            👻 Horror
+        </button>
+
+        <button class="genre-option" data-genre="Comedy">
+            😂 Comedy
+        </button>
+
+        <button class="genre-option" data-genre="RPG">
+            🧙 RPG
+        </button>
+
+        <button class="genre-option" data-genre="Strategy">
+            ♟ Strategy
+        </button>
+
+        <button class="genre-option" data-genre="Simulation">
+            🏗 Simulation
+        </button>
+
+        <button class="genre-option" data-genre="Sports">
+            ⚽ Sports
+        </button>
+
+        <button class="genre-option" data-genre="Custom">
+            ✦ Custom
+        </button>
+
+    </div>
+
+    <!-- Release Date -->
+
+<div class="filter-section">
+
+    <h3>Release Date</h3>
+
+    <div class="date-picker">
+
+        <button class="date-option selected" data-date="any">
+            <strong>Any</strong>
+            <span>All games</span>
+        </button>
+
+        <button class="date-option" data-date="2026">
+            <strong>2026</strong>
+            <span>This year</span>
+        </button>
+
+        <button class="date-option" data-date="2025">
+            <strong>2025</strong>
+            <span>Last year</span>
+        </button>
+
+        <button class="date-option" data-date="recent">
+            <strong>Recent</strong>
+            <span>Last 90 days</span>
+        </button>
+
+    </div>
+
+    <div class="specific-date">
+
+    <label for="releaseDate">Specific release date</label>
+
+    <div class="specific-date">
+
+
+    <button class="date-input-button" id="dateInputButton">
+        <span class="calendar-icon">📅</span>
+        <span id="dateButtonText">Pick a date</span>
+    </button>
+
+    <input
+        type="date"
+        id="releaseDate"
+        class="hidden-date-input"
+    >
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+        <button class="apply-filters" id="applyFilters">
+            Apply Filters
+        </button>
+
+    </div>
+
+</div>
 
     <!-- AI Prompt -->
     <div class="ai-container">
