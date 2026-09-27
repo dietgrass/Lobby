@@ -21,7 +21,11 @@
 
             <div class="search-bar">
                 <span>⌕</span>
-                <input type="text" placeholder="Search games...">
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Search games..."
+                >
             </div>
 
             <button class="filter-button" id="filterButton">
@@ -54,6 +58,22 @@
     </div>
 
 </section>
+
+<section class="game-section">
+
+    <div class="section-heading">
+        <div>
+            <h1>Steam Games</h1>
+            <p>Popular games on Steam</p>
+        </div>
+    </div>
+
+    <div class="game-grid" id="steamGameGrid">
+        <!-- Steam games will be loaded here -->
+    </div>
+
+</section>
+
 
 
         <!-- Trending Section -->
@@ -383,7 +403,44 @@
     </div>
 
 
-    <script src="script.js"></script>
+    <!-- Game Details Modal -->
 
+<div id="gameModal" class="game-modal">
+
+    <div class="game-modal-content">
+
+        <button id="closeGameModal" class="close-game-modal">
+            ×
+        </button>
+
+        <img id="modalGameImage" class="modal-game-image" src="" alt="">
+
+        <div class="modal-game-info">
+
+            <h2 id="modalGameName"></h2>
+
+            <div class="modal-game-details">
+                <span id="modalGameGenre"></span>
+                <span id="modalGamePlayers"></span>
+            </div>
+
+            <p id="modalGameDescription"></p>
+
+            <a
+                id="playGameButton"
+                class="play-game-button"
+                href="#"
+                target="_blank"
+            >
+                Play on Roblox →
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>
