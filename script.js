@@ -34,6 +34,15 @@ const priceDisplay = document.getElementById("priceDisplay");
 const sliderRange = document.getElementById("sliderRange");
 const priceSliderContainer = document.getElementById("priceSliderContainer");
 
+const gameModal = document.getElementById("gameModal");
+const closeGameModal = document.getElementById("closeGameModal");
+
+const modalGameImage = document.getElementById("modalGameImage");
+const modalGameName = document.getElementById("modalGameName");
+const modalGameGenre = document.getElementById("modalGameGenre");
+const modalGamePlayers = document.getElementById("modalGamePlayers");
+const modalGameDescription = document.getElementById("modalGameDescription");
+const playGameButton = document.getElementById("playGameButton");
 
 function updatePriceSlider() {
 
@@ -334,7 +343,9 @@ getRobloxGames();
 // =========================
 
 const gameGrid = document.getElementById("gameGrid");
-
+const steamGameGrid =
+    document.getElementById("steamGameGrid");
+const searchInput = document.getElementById("searchInput");
 
 async function loadRobloxGames() {
 
@@ -346,6 +357,40 @@ async function loadRobloxGames() {
 
         const games = await response.json();
 
+searchInput.addEventListener("input", function() {
+
+    const searchText = searchInput.value.toLowerCase();
+
+    const gameCards = document.querySelectorAll(".game-card");
+
+    gameCards.forEach(function(card, index) {
+
+        const game = games[index];
+
+        const gameName =
+            game.name.toLowerCase();
+
+        const gameGenre =
+            (game.genre || "").toLowerCase();
+
+        if (
+            gameName.includes(searchText) ||
+            gameGenre.includes(searchText)
+        ) {
+
+            card.style.display = "";
+
+        } 
+        else {
+
+            card.style.display = "none";
+
+        }
+
+    });
+
+});
+
 
         games.forEach(function(game) {
 
@@ -356,9 +401,12 @@ async function loadRobloxGames() {
 
             gameCard.innerHTML = `
 
-                <div class="game-image">
-                    <span class="platform">ROBLOX</span>
-                </div>
+                <div class="game-image"
+     style="background-image: url('${game.thumbnail}')">
+
+    <span class="platform">ROBLOX</span>
+
+</div>
 
                 <div class="game-info">
 
@@ -380,8 +428,43 @@ async function loadRobloxGames() {
 
             gameGrid.appendChild(gameCard);
 
+             gameCard.addEventListener("click", function() {
+
+    modalGameImage.src = game.thumbnail;
+
+    modalGameName.textContent = game.name;
+
+    modalGameGenre.textContent =
+        "🎮 " + game.genre;
+
+    modalGamePlayers.textContent =
+        "👥 " + game.players.toLocaleString() + " Players";
+
+    modalGameDescription.textContent =
+        game.description || "No description available.";
+
+    playGameButton.href =
+        "https://www.roblox.com/games/" + game.placeId;
+
+    gameModal.classList.add("active");
+
+});
+
         });
 
+        closeGameModal.addEventListener("click", function() {
+
+    gameModal.classList.remove("active");
+
+});
+
+gameModal.addEventListener("click", function(event) {
+
+    if (event.target === gameModal) {
+        gameModal.classList.remove("active");
+    }
+
+});
 
     } catch (error) {
 
@@ -396,3 +479,146 @@ async function loadRobloxGames() {
 
 
 loadRobloxGames();
+
+// =========================
+// DISPLAY STEAM GAME
+// =========================
+
+function displaySteamGame(game) {
+
+    const gameCard = document.createElement("div");
+
+    gameCard.classList.add("game-card");
+
+    gameCard.innerHTML = `
+
+        <div class="game-image"
+             style="background-image: url('${game.thumbnail}')">
+
+            <span class="platform">STEAM</span>
+
+        </div>
+
+        <div class="game-info">
+
+            <h2>${game.name}</h2>
+
+            <div class="game-details">
+                <span>📅 ${game.releaseDate}</span>
+            </div>
+
+            <div class="game-bottom">
+                <span class="price">${game.price}</span>
+                <span class="genre">${game.genre || "Game"}</span>
+            </div>
+
+        </div>
+
+    `;
+
+    steamGameGrid.appendChild(gameCard);
+
+}
+
+// =========================
+// LOAD STEAM GAMES
+// =========================
+
+async function loadSteamGames() {
+
+    try {
+
+        const response = await fetch(
+            "http://localhost:3000/api/steam-games"
+        );
+
+        const games = await response.json();
+
+        games.forEach(function(game) {
+
+            displaySteamGame(game);
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Could not load Steam games:",
+            error
+        );
+
+    }
+
+}
+
+loadSteamGames();
+
+// =========================
+// STEAM SEARCH
+// =========================
+
+
+searchInput.addEventListener("keydown", async function(event) {
+
+    if (event.key !== "Enter") {
+        return;
+    }
+
+    const search = searchInput.value.trim();
+
+    if (!search) {
+        return;
+    }
+
+    try {
+
+        // Search Steam
+        const searchResponse = await fetch(
+            "http://localhost:3000/api/steam-search?q=" +
+            encodeURIComponent(search)
+        );
+
+        const searchData = await searchResponse.json();
+
+        console.log("STEAM SEARCH RESULTS:");
+        console.log(searchData);
+
+
+        // Check if Steam found anything
+        if (
+            !searchData.items ||
+            searchData.items.length === 0
+        ) {
+
+            console.log("No Steam games found.");
+
+            return;
+        }
+
+
+        // Get first result
+        const appId =
+            searchData.items[0].id;
+
+        console.log("FOUND STEAM APP ID:", appId);
+
+
+        // Get game details
+        const gameResponse = await fetch(
+            "http://localhost:3000/api/steam-game/" +
+            appId
+        );
+
+        const game = await gameResponse.json();
+
+        console.log("STEAM GAME DETAILS:");
+        console.log(game);
+        displaySteamGame(game);
+
+    } catch (error) {
+
+        console.error("Steam search error:", error);
+
+    }
+
+});
