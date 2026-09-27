@@ -8,10 +8,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Home
-app.get("/", function(req, res) {
-    res.send("Lobby backend is running!");
-});
+// Serve frontend
+app.use(express.static(__dirname));
 
 app.get("/api/steam-game/:appId", async function (req, res) {
   const appId = req.params.appId;
@@ -634,10 +632,6 @@ app.get("/api/roblox-search", async function (req, res) {
 });
 
 // Start server
-app.listen(3000, function() {
-
-    console.log(
-        "Lobby server running on http://localhost:3000"
-    );
-
+app.listen(3000, function () {
+  console.log("Lobby server running on http://localhost:3000");
 });
