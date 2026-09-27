@@ -4,6 +4,8 @@ const crypto = require("crypto");
 
 const app = express();
 
+
+
 app.use(cors());
 app.use(express.json());
 
@@ -97,103 +99,60 @@ const game = gameData.data;
 // POPULAR STEAM GAMES
 // =========================
 
-app.get("/api/steam-games", async function(req, res) {
-    
-    const searches = [
-    "Counter-Strike",
-    "Dota 2",
-    "Lethal Company",
-    "Phasmophobia",
-    "Among Us",
-    "Rust",
-    "Terraria",
-    "Stardew Valley",
-    "Dead by Daylight",
-    "Garry's Mod",
-    "Hades",
-    "Baldur's Gate",
-    "Palworld",
-    "Valheim",
-    "Hollow Knight",
-    "Left 4 Dead 2",
-    "Portal 2",
-    "Cyberpunk",
-    "The Witcher 3",
-    "Elden Ring"
-];
 
-    const games = [];
+app.get("/api/steam-games", async function(req, res) {
 
     try {
 
-        for (const search of searches) {
+        const response = await fetch(
+            "https://api.steampowered.com/ISteamChartsService/GetMostPlayedGames/v1/"
+        );
 
-            const searchResponse = await fetch(
-                "https://store.steampowered.com/api/storesearch/" +
-                "?term=" + encodeURIComponent(search) +
+        const data = await response.json();
+
+        const ranks = data.response.ranks;
+
+        console.log("STEAM RANK COUNT:", ranks.length);
+
+        const games = [];
+
+        // Get details for the popular games
+        let rankIndex = 0;
+
+while (games.length < 20 && rankIndex < ranks.length) {
+
+    const rank = ranks[rankIndex];
+
+    rankIndex++;
+
+            const appId = rank.appid;
+
+            const detailsResponse = await fetch(
+                "https://store.steampowered.com/api/appdetails" +
+                "?appids=" + appId +
                 "&cc=us" +
                 "&l=english"
             );
 
-            const searchData = await searchResponse.json();
+            const detailsData =
+                await detailsResponse.json();
 
-console.log("STEAM SEARCH:", search);
-console.log(
-    "RESULTS:",
-    searchData.items ? searchData.items.length : 0
-);
+            const gameData =
+                detailsData[appId];
 
-if (
-    !searchData.items ||
-    searchData.items.length === 0
-) {
-    continue;
-}
+            if (
+                !gameData ||
+                !gameData.success ||
+                !gameData.data
+            ) {
+                continue;
+            }
 
-        let game = null;
+            const game = gameData.data;
 
-for (const item of searchData.items) {
-
-    if (item.type !== "app") {
-        continue;
-    }
-
-    const appId = item.id;
-
-    const detailsResponse = await fetch(
-        "https://store.steampowered.com/api/appdetails" +
-        "?appids=" + appId +
-        "&cc=us" +
-        "&l=english"
-    );
-
-    const detailsData =
-        await detailsResponse.json();
-
-    const gameData =
-        detailsData[appId];
-
-    if (
-        !gameData ||
-        !gameData.success ||
-        !gameData.data
-    ) {
-        continue;
-    }
-
-    // Make sure Steam identifies it as a game
-    if (gameData.data.type !== "game") {
-        continue;
-    }
-
-    game = gameData.data;
-
-    break;
-}
-
-if (!game) {
-    continue;
-}
+            if (game.type !== "game") {
+                continue;
+            }
 
             games.push({
 
@@ -229,17 +188,151 @@ if (!game) {
 
         }
 
+        console.log("POPULAR STEAM GAMES FOUND:");
+        console.log(games);
+
         res.json(games);
 
     } catch (error) {
 
         console.error(
-            "Steam games error:",
+            "Steam popular games error:",
             error
         );
 
         res.status(500).json({
-            error: "Could not get Steam games"
+            error: "Could not get popular Steam games"
+        });
+
+    }
+
+});
+
+app.get("/api/steam-search", async function(req, res) {
+
+    const search = req.query.q;
+
+    if (!search) {
+        return res.status(400).json({
+            error: "Missing search query"
+        });
+    }
+
+    try {
+
+        const response = await fetch(
+            "https://store.steampowered.com/api/storesearch/" +
+            "?term=" + encodeURIComponent(search) +
+            "&cc=us" +
+            "&l=english"
+        );
+
+        const data = await response.json();
+
+        console.log("STEAM SEARCH:", search);
+
+        if (!data.items || data.items.length === 0) {
+
+            return res.json({
+                game: null
+            });
+
+        }
+
+        let game = null;
+
+        // Check Steam results until we find an actual game
+        for (const item of data.items) {
+
+            if (item.type !== "app") {
+                continue;
+            }
+
+            const appId = item.id;
+
+            const detailsResponse = await fetch(
+                "https://store.steampowered.com/api/appdetails" +
+                "?appids=" + appId +
+                "&cc=us" +
+                "&l=english"
+            );
+
+            const detailsData =
+                await detailsResponse.json();
+
+            const gameData =
+                detailsData[appId];
+
+            if (
+                !gameData ||
+                !gameData.success ||
+                !gameData.data
+            ) {
+                continue;
+            }
+
+            if (gameData.data.type !== "game") {
+                continue;
+            }
+
+            game = gameData.data;
+
+            break;
+        }
+
+        if (!game) {
+
+            return res.json({
+                game: null
+            });
+
+        }
+
+        const steamGame = {
+
+            name: game.name,
+
+            appId: game.steam_appid,
+
+            description:
+                game.short_description || "",
+
+            thumbnail:
+                game.header_image || "",
+
+            genre:
+                game.genres &&
+                game.genres.length > 0
+                    ? game.genres[0].description
+                    : "Game",
+
+            releaseDate:
+                game.release_date
+                    ? game.release_date.date
+                    : "N/A",
+
+            price:
+                game.is_free
+                    ? "Free"
+                    : game.price_overview
+                        ? game.price_overview.final_formatted
+                        : "N/A"
+
+        };
+
+        console.log("STEAM GAME FOUND:");
+        console.log(game.name);
+
+        res.json({
+            game: steamGame
+        });
+
+    } catch (error) {
+
+        console.error("Steam search error:", error);
+
+        res.status(500).json({
+            error: "Could not search Steam"
         });
 
     }
@@ -267,6 +360,8 @@ app.get("/api/steam-search", async function(req, res) {
         );
 
         const data = await response.json();
+        console.log("STEAM SEARCH RESULT:");
+        console.log(JSON.stringify(data, null, 2));
 
         res.json(data);
 
@@ -328,7 +423,8 @@ app.get("/api/roblox-games", async function(req, res) {
             name: game.name,
             players: game.playerCount,
             universeId: game.universeId,
-            placeId: game.rootPlaceId
+            placeId: game.rootPlaceId,
+            price: "Free"
         };
 
     });
@@ -336,6 +432,7 @@ app.get("/api/roblox-games", async function(req, res) {
 
         // Get game details in batches
 
+        
 for (let i = 0; i < games.length; i += 10) {
 
     const batch = games.slice(i, i + 10);
@@ -473,6 +570,247 @@ games.forEach(function(game) {
 
 });
 
+app.get("/api/roblox-search", async function(req, res) {
+
+    const search = req.query.q;
+
+    if (!search) {
+        return res.status(400).json({
+            error: "Missing search query"
+        });
+    }
+
+    const sessionId = crypto.randomUUID();
+
+    try {
+
+        // =========================
+        // SEARCH ROBLOX
+        // =========================
+
+        const response = await fetch(
+            "https://apis.roblox.com/search-api/omni-search" +
+            "?searchQuery=" + encodeURIComponent(search) +
+            "&sessionId=" + sessionId +
+            "&pageType=all"
+        );
+
+        const data = await response.json();
+
+        console.log("ROBLOX SEARCH API:");
+        console.log(data);
+
+
+        // Make sure searchResults exists
+        if (!data.searchResults) {
+
+            console.log("No Roblox search results found.");
+
+            return res.json([]);
+
+        }
+
+
+        const games = [];
+
+
+        // =========================
+        // GET GAME RESULTS
+        // =========================
+
+        data.searchResults.forEach(function(result) {
+
+            if (result.contentGroupType !== "Game") {
+                return;
+            }
+
+            if (!result.contents || result.contents.length === 0) {
+                return;
+            }
+
+            const game = result.contents[0];
+
+            if (!game.universeId) {
+                return;
+            }
+
+            games.push({
+
+                name: game.name || "Unknown Game",
+
+                description:
+                    game.description || "",
+
+                players:
+                    game.playerCount || 0,
+
+                universeId:
+                    game.universeId,
+
+                placeId:
+                    game.rootPlaceId || 0,
+
+                thumbnail: "",
+
+                genre: "ROBLOX"
+
+            });
+
+        });
+
+
+        console.log("ROBLOX GAMES FOUND:");
+        console.log(games);
+
+
+        // =========================
+        // GET GAME DETAILS
+        // =========================
+
+        for (let i = 0; i < games.length; i += 10) {
+
+            const batch =
+                games.slice(i, i + 10);
+
+            const batchIds =
+                batch
+                    .map(function(game) {
+                        return game.universeId;
+                    })
+                    .join(",");
+
+
+            const detailsUrl =
+                "https://games.roblox.com/v1/games?universeIds=" +
+                batchIds;
+
+
+            const detailsResponse =
+                await fetch(detailsUrl);
+
+            const detailsData =
+                await detailsResponse.json();
+
+
+            console.log("ROBLOX DETAILS:");
+            console.log(detailsData);
+
+
+            if (detailsData.data) {
+
+                batch.forEach(function(game) {
+
+                    const details =
+                        detailsData.data.find(
+                            function(item) {
+                                return item.id === game.universeId;
+                            }
+                        );
+
+
+                    if (details) {
+
+                        game.description =
+                            details.description || "";
+
+                        game.genre =
+                            mapGenre(details.genre);
+
+                    }
+
+                });
+
+            }
+
+        }
+
+
+        // =========================
+        // GET THUMBNAILS
+        // =========================
+
+        const universeIds =
+            games
+                .map(function(game) {
+                    return game.universeId;
+                })
+                .join(",");
+
+
+        if (universeIds) {
+
+            const thumbnailUrl =
+                "https://thumbnails.roblox.com/v1/games/multiget/thumbnails" +
+                "?universeIds=" + universeIds +
+                "&countPerUniverse=1" +
+                "&defaults=true" +
+                "&size=768x432" +
+                "&format=Png" +
+                "&isCircular=false";
+
+
+            const thumbnailResponse =
+                await fetch(thumbnailUrl);
+
+
+            const thumbnailData =
+                await thumbnailResponse.json();
+
+
+            console.log("ROBLOX THUMBNAILS:");
+            console.log(thumbnailData);
+
+
+            games.forEach(function(game) {
+
+                const thumbnailGame =
+                    thumbnailData.data.find(
+                        function(item) {
+                            return item.universeId === game.universeId;
+                        }
+                    );
+
+
+                if (
+                    thumbnailGame &&
+                    thumbnailGame.thumbnails &&
+                    thumbnailGame.thumbnails.length > 0
+                ) {
+
+                    game.thumbnail =
+                        thumbnailGame.thumbnails[0].imageUrl;
+
+                }
+
+            });
+
+        }
+
+
+        // =========================
+        // SEND RESULTS
+        // =========================
+
+        console.log("FINAL ROBLOX SEARCH GAMES:");
+        console.log(games);
+
+        res.json(games);
+
+
+    } catch (error) {
+
+        console.error(
+            "Roblox search error:",
+            error
+        );
+
+        res.status(500).json({
+            error: "Could not search Roblox"
+        });
+
+    }
+
+});
 
 // Start server
 app.listen(3000, function() {
