@@ -7,6 +7,14 @@ const filterOverlay = document.getElementById("filterOverlay");
 const closeFilter = document.getElementById("closeFilter");
 const applyFilters = document.getElementById("applyFilters");
 
+const logo = document.querySelector(".logo");
+
+const loadingScreen =
+    document.getElementById("loadingScreen");
+
+logo.addEventListener("click", function() {
+    window.location.href = "/";
+});
 
 filterButton.addEventListener("click", function() {
     filterOverlay.classList.add("active");
@@ -43,6 +51,8 @@ const modalGameGenre = document.getElementById("modalGameGenre");
 const modalGamePlayers = document.getElementById("modalGamePlayers");
 const modalGameDescription = document.getElementById("modalGameDescription");
 const playGameButton = document.getElementById("playGameButton");
+
+
 
 function updatePriceSlider() {
 
@@ -357,42 +367,10 @@ async function loadRobloxGames() {
 
         const games = await response.json();
 
-searchInput.addEventListener("input", function() {
-
-    const searchText = searchInput.value.toLowerCase();
-
-    const gameCards = document.querySelectorAll(".game-card");
-
-    gameCards.forEach(function(card, index) {
-
-        const game = games[index];
-
-        const gameName =
-            game.name.toLowerCase();
-
-        const gameGenre =
-            (game.genre || "").toLowerCase();
-
-        if (
-            gameName.includes(searchText) ||
-            gameGenre.includes(searchText)
-        ) {
-
-            card.style.display = "";
-
-        } 
-        else {
-
-            card.style.display = "none";
-
-        }
-
-    });
-
-});
 
 
-        games.forEach(function(game) {
+
+        games.slice(0, 12).forEach(function(game) {
 
             const gameCard = document.createElement("div");
 
@@ -408,20 +386,16 @@ searchInput.addEventListener("input", function() {
 
 </div>
 
-                <div class="game-info">
+                <h2>${game.name || "Unknown Game"}</h2>
 
-                    <h2>${game.name}</h2>
+<div class="game-details">
+    <span>📅 ${game.releaseDate || "N/A"}</span>
+</div>
 
-                    <div class="game-details">
-                        <span>👥 ${game.players.toLocaleString()} Playing</span>
-                    </div>
-
-                    <div class="game-bottom">
-                        <span class="price">Free</span>
-                        <span class="genre">${game.genre || "Game"}</span>
-                    </div>
-
-                </div>
+<div class="game-bottom">
+    <span class="price">${game.price || "Free"}</span>
+    <span class="genre">${game.genre || "Game"}</span>
+</div>
 
             `;
 
@@ -430,23 +404,7 @@ searchInput.addEventListener("input", function() {
 
              gameCard.addEventListener("click", function() {
 
-    modalGameImage.src = game.thumbnail;
-
-    modalGameName.textContent = game.name;
-
-    modalGameGenre.textContent =
-        "🎮 " + game.genre;
-
-    modalGamePlayers.textContent =
-        "👥 " + game.players.toLocaleString() + " Players";
-
-    modalGameDescription.textContent =
-        game.description || "No description available.";
-
-    playGameButton.href =
-        "https://www.roblox.com/games/" + game.placeId;
-
-    gameModal.classList.add("active");
+    openGameModal(game, "ROBLOX");
 
 });
 
@@ -466,6 +424,66 @@ gameModal.addEventListener("click", function(event) {
 
 });
 
+let robloxDisplayCount = 12;
+
+if (games.length > 12) {
+
+    const viewMoreButton =
+        document.createElement("button");
+
+    viewMoreButton.textContent = "View More";
+
+    viewMoreButton.classList.add("view-more-button");
+
+    gameGrid.appendChild(viewMoreButton);
+
+    viewMoreButton.addEventListener("click", function() {
+
+    const oldCount = robloxDisplayCount;
+
+    robloxDisplayCount += 12;
+
+    games.slice(oldCount, robloxDisplayCount).forEach(function(game) {
+
+        const gameCard = document.createElement("div");
+
+        gameCard.classList.add("game-card");
+
+        gameCard.innerHTML = `
+
+            <div class="game-image"
+                 style="background-image: url('${game.thumbnail}')">
+
+                <span class="platform">ROBLOX</span>
+
+            </div>
+
+            <h2>${game.name || "Unknown Game"}</h2>
+
+            <div class="game-details">
+                <span>📅 ${game.releaseDate || "N/A"}</span>
+            </div>
+
+            <div class="game-bottom">
+                <span class="price">${game.price || "Free"}</span>
+                <span class="genre">${game.genre || "Game"}</span>
+            </div>
+
+        `;
+
+        gameGrid.insertBefore(gameCard, viewMoreButton);
+
+    });
+
+    // Remove button when there are no more games
+    if (robloxDisplayCount >= games.length) {
+        viewMoreButton.remove();
+    }
+
+});
+
+}
+
     } catch (error) {
 
         console.error(
@@ -480,9 +498,130 @@ gameModal.addEventListener("click", function(event) {
 
 loadRobloxGames();
 
+
+async function searchRoblox(search) {
+
+    try {
+
+        const response = await fetch(
+            "http://localhost:3000/api/roblox-search?q=" +
+            encodeURIComponent(search)
+        );
+
+        const games = await response.json();
+
+        console.log("ROBLOX SEARCH GAMES:");
+        console.log(games);
+
+        return games;
+
+    } catch (error) {
+
+        console.error(
+            "Roblox search error:",
+            error
+        );
+
+        return [];
+
+    }
+
+}
+
+function displayRobloxGame(game, container = gameGrid) {
+
+    const gameCard = document.createElement("div");
+
+    gameCard.classList.add("game-card");
+
+    gameCard.innerHTML = `
+
+        <div class="game-image"
+             style="background-image: url('${game.thumbnail}')">
+
+            <span class="platform">ROBLOX</span>
+
+        </div>
+
+        <h2>${game.name || "Unknown Game"}</h2>
+
+        <div class="game-details">
+            <span>👥 ${game.players?.toLocaleString() || 0} Players</span>
+        </div>
+
+        <div class="game-bottom">
+            <span class="price">Free</span>
+            <span class="genre">ROBLOX</span>
+        </div>
+
+    `;
+
+    container.appendChild(gameCard);
+
+
+    gameCard.addEventListener("click", function() {
+
+        openGameModal(game, "ROBLOX");
+
+    });
+
+}
+
 // =========================
 // DISPLAY STEAM GAME
 // =========================
+
+
+function openGameModal(game, platform) {
+
+    modalGameImage.src = game.thumbnail;
+
+    modalGameName.textContent =
+        game.name || "Unknown Game";
+
+    modalGameGenre.textContent =
+        "🎮 " + (game.genre || "Game");
+
+
+    if (platform === "ROBLOX") {
+
+        modalGamePlayers.textContent =
+            "👥 " +
+            (game.players
+                ? game.players.toLocaleString()
+                : "0") +
+            " Players";
+
+        playGameButton.href =
+            "https://www.roblox.com/games/" +
+            game.placeId;
+
+    }
+
+    else if (platform === "STEAM") {
+
+        modalGamePlayers.textContent =
+            "🎮 Steam";
+
+        playGameButton.href =
+            "https://store.steampowered.com/app/" +
+            game.appId;
+
+    }
+
+
+    playGameButton.textContent = "Game Link";
+
+
+    modalGameDescription.textContent =
+        game.description ||
+        "No description available.";
+
+    gameModal.classList.add("active");
+
+}
+
+
 
 function displaySteamGame(game) {
 
@@ -518,6 +657,14 @@ function displaySteamGame(game) {
 
     steamGameGrid.appendChild(gameCard);
 
+
+    // Open modal when Steam game is clicked
+    gameCard.addEventListener("click", function() {
+
+        openGameModal(game, "STEAM");
+
+    });
+
 }
 
 // =========================
@@ -552,11 +699,9 @@ async function loadSteamGames() {
 }
 
 loadSteamGames();
-
 // =========================
-// STEAM SEARCH
+// SEARCH ALL GAMES
 // =========================
-
 
 searchInput.addEventListener("keydown", async function(event) {
 
@@ -570,54 +715,144 @@ searchInput.addEventListener("keydown", async function(event) {
         return;
     }
 
+    console.log("SEARCHING FOR:", search);
+
+    // Clear current games
+    gameGrid.innerHTML = "";
+    steamGameGrid.innerHTML = "";
+
     try {
 
-        // Search Steam
-        const searchResponse = await fetch(
+        // Search Steam and Roblox at the same time
+        const steamPromise = fetch(
             "http://localhost:3000/api/steam-search?q=" +
             encodeURIComponent(search)
         );
 
-        const searchData = await searchResponse.json();
+        const robloxPromise = searchRoblox(search);
+
+        const [steamResponse, robloxGames] =
+            await Promise.all([
+                steamPromise,
+                robloxPromise
+            ]);
+
+
+        // =========================
+        // STEAM RESULTS
+        // =========================
+
+        const steamData =
+            await steamResponse.json();
 
         console.log("STEAM SEARCH RESULTS:");
-        console.log(searchData);
+        console.log(steamData);
 
 
-        // Check if Steam found anything
-        if (
-            !searchData.items ||
-            searchData.items.length === 0
-        ) {
+        if (steamData.game) {
 
-            console.log("No Steam games found.");
+            displaySteamGame(steamData.game);
 
-            return;
         }
 
 
-        // Get first result
-        const appId =
-            searchData.items[0].id;
+        // =========================
+        // ROBLOX RESULTS
+        // =========================
 
-        console.log("FOUND STEAM APP ID:", appId);
+        if (robloxGames.length > 0) {
+
+    const initialRobloxGames = robloxGames.slice(0, 5);
+
+    initialRobloxGames.forEach(function(game) {
+
+        displayRobloxGame(game);
+
+    });
 
 
-        // Get game details
-        const gameResponse = await fetch(
-            "http://localhost:3000/api/steam-game/" +
-            appId
+    // =========================
+    // VIEW MORE ROBLOX
+    // =========================
+
+    if (robloxGames.length > 5) {
+
+        const viewMoreButton =
+            document.createElement("button");
+
+        viewMoreButton.textContent =
+            "View More";
+
+        viewMoreButton.classList.add(
+            "view-more-button"
         );
 
-        const game = await gameResponse.json();
+        gameGrid.appendChild(viewMoreButton);
 
-        console.log("STEAM GAME DETAILS:");
-        console.log(game);
-        displaySteamGame(game);
+
+        let robloxDisplayCount = 5;
+
+
+        viewMoreButton.addEventListener(
+            "click",
+            function() {
+
+                const oldCount =
+                    robloxDisplayCount;
+
+                robloxDisplayCount += 5;
+
+
+                robloxGames
+                    .slice(
+                        oldCount,
+                        robloxDisplayCount
+                    )
+                    .forEach(function(game) {
+
+                        displayRobloxGame(game);
+
+                    });
+
+
+                // Move View More button
+                // back to the bottom
+                gameGrid.appendChild(
+                    viewMoreButton
+                );
+
+
+                if (
+                    robloxDisplayCount >=
+                    robloxGames.length
+                ) {
+
+                    viewMoreButton.remove();
+
+                }
+
+            }
+        );
+
+    }
+
+}
+
+
+        console.log(
+            "Search complete:",
+            steamData.game ? 1 : 0,
+            "Steam result(s),",
+            robloxGames.length,
+            "Roblox result(s)"
+        );
 
     } catch (error) {
 
-        console.error("Steam search error:", error);
+        console.error(
+            "Search error:",
+            error
+        );
 
     }
 
