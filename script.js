@@ -362,7 +362,7 @@ async function loadRobloxGames() {
     try {
 
         const response = await fetch(
-            "http://localhost:3000/api/roblox-games"
+            "/api/roblox-games"
         );
 
         const games = await response.json();
@@ -504,7 +504,7 @@ async function searchRoblox(search) {
     try {
 
         const response = await fetch(
-            "http://localhost:3000/api/roblox-search?q=" +
+            "/api/roblox-search?q=" +
             encodeURIComponent(search)
         );
 
@@ -676,7 +676,7 @@ async function loadSteamGames() {
     try {
 
         const response = await fetch(
-            "http://localhost:3000/api/steam-games"
+            "/api/steam-games"
         );
 
         const games = await response.json();
@@ -725,7 +725,7 @@ searchInput.addEventListener("keydown", async function(event) {
 
         // Search Steam and Roblox at the same time
         const steamPromise = fetch(
-            "http://localhost:3000/api/steam-search?q=" +
+            "/api/steam-search?q=" +
             encodeURIComponent(search)
         );
 
