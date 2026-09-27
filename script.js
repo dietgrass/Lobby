@@ -22,6 +22,12 @@ applyFilters.addEventListener("click", function() {
     filterOverlay.classList.remove("active");
 });
 
+//click outside the filter panel to close it
+filterOverlay.addEventListener("click", function(event) {
+    if (event.target === filterOverlay) {
+        filterOverlay.classList.remove("active");
+    }
+});
 
 // =========================
 // PRICE SLIDER
